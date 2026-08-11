@@ -1,0 +1,137 @@
+# Candidate Elimination Algorithm
+# Lab 4
+
+# Training Dataset
+data = [
+    ['Sunny', 'Warm', 'Normal', 'Strong', 'Yes'],
+    ['Sunny', 'Warm', 'High', 'Strong', 'Yes'],
+    ['Rainy', 'Cold', 'High', 'Strong', 'No'],
+    ['Sunny', 'Warm', 'High', 'Weak', 'Yes']
+]
+
+# Attribute names
+attributes = ['Sky', 'AirTemp', 'Humidity', 'Wind']
+
+
+# Check whether hypothesis covers an instance
+def covers(hypothesis, instance):
+    for h, value in zip(hypothesis, instance):
+        if h != '?' and h != value:
+            return False
+    return True
+
+
+# Find all possible values of each attribute
+domains = []
+
+for i in range(len(attributes)):
+    values = []
+
+    for row in data:
+        if row[i] not in values:
+            values.append(row[i])
+
+    domains.append(values)
+
+
+# Initial boundaries
+S = ['Ø', 'Ø', 'Ø', 'Ø']
+G = [['?', '?', '?', '?']]
+
+
+print("==========================================")
+print("   CANDIDATE ELIMINATION ALGORITHM")
+print("==========================================")
+
+
+# Process each training example
+for step, row in enumerate(data, start=1):
+
+    instance = row[:4]
+    target = row[4]
+
+    print("\n------------------------------------------")
+    print("Processing D" + str(step))
+    print("Instance :", instance)
+    print("Target   :", target)
+    print("------------------------------------------")
+
+    # Positive example
+    if target == 'Yes':
+
+        # Remove hypotheses from G that don't cover instance
+        G = [g for g in G if covers(g, instance)]
+
+        # Generalize S
+        for i in range(len(S)):
+
+            if S[i] == 'Ø':
+                S[i] = instance[i]
+
+            elif S[i] != instance[i]:
+                S[i] = '?'
+
+    # Negative example
+    else:
+
+        new_G = []
+
+        for g in G:
+
+            # If G hypothesis covers negative example,
+            # specialize it
+            if covers(g, instance):
+
+                for i in range(len(attributes)):
+
+                    if g[i] == '?':
+
+                        for value in domains[i]:
+
+                            if value != instance[i]:
+
+                                new_hypothesis = g.copy()
+                                new_hypothesis[i] = value
+
+                                # Check that hypothesis is
+                                # more general than S
+                                valid = True
+
+                                for j in range(len(attributes)):
+
+                                    if S[j] != 'Ø':
+                                        if (new_hypothesis[j] != '?' and
+                                                new_hypothesis[j] != S[j]):
+                                            valid = False
+                                            break
+
+                                if valid:
+                                    new_G.append(new_hypothesis)
+
+            else:
+                new_G.append(g)
+
+        G = new_G
+
+    # Display boundaries
+    print("S (Specific Boundary):")
+    print(S)
+
+    print("\nG (General Boundary):")
+    for hypothesis in G:
+        print(hypothesis)
+
+
+# Final result
+print("\n==========================================")
+print("          FINAL VERSION SPACE")
+print("==========================================")
+
+print("\nMost Specific Boundary (S):")
+print(S)
+
+print("\nMost General Boundary (G):")
+for hypothesis in G:
+    print(hypothesis)
+
+print("\n==========================================")
